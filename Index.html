@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Calling</title>
+    <style>
+        /* Add CSS styles here */
+        video {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebRTC Calling</h1>
+    <div>
+        <video id="localVideo" autoplay muted></video>
+        <video id="remoteVideo" autoplay></video>
+    </div>
+    <button id="startCall">Start Call</button>
+    <button id="endCall">End Call</button>
+
+    <script>
+        // JavaScript code for WebRTC calling
+
+        // Access user media (camera and microphone)
+        navigator.mediaDevices
+            .getUserMedia({ video: true, audio: true })
+            .then((stream) => {
+                const localVideo = document.getElementById("localVideo");
+                localVideo.srcObject = stream;
+            })
+            .catch((error) => {
+                console.error("Error accessing media devices:", error);
+            });
+
+        // Create a peer connection
+        const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+        const peerConnection = new RTCPeerConnection(configuration);
+
+        // Add the local stream to the peer connection
+        const localStream = document.getElementById("localVideo").srcObject;
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        // Handle incoming ice candidates
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                // Send the candidate to the remote peer
+                // Typically, you would send this via a signaling server
+            }
+        };
+
+        // Handle the remote stream
+        peerConnection.ontrack = (event) => {
+            const remoteVideo = document.getElementById("remoteVideo");
+            remoteVideo.srcObject = event.streams[0];
+        };
+
+        // Button actions
+        const startCallButton = document.getElementById("startCall");
+        const endCallButton = document.getElementById("endCall");
+
+        startCallButton.addEventListener("click", () => {
+            // Start the call by creating an offer
+            peerConnection
+                .createOffer()
+                .then((offer) => {
+                    return peerConnection.setLocalDescription(offer);
+                })
+                .then(() => {
+                    // Send the offer to the remote peer
+                    // Typically, you would send this via a signaling server
+                })
+                .catch((error) => {
+                    console.error("Error creating offer:", error);
+                });
+        });
+
+        endCallButton.addEventListener("click", () => {
+            // End the call by closing the peer connection
+            peerConnection.close();
+        });
+    </script>
+</body>
+</html>
